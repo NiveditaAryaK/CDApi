@@ -30,6 +30,7 @@ app.get("/exp3", (req, res) => {
   } `);
 });
 
+<<<<<<< HEAD
 app.get("/srp", (req, res) => {
   res.send(` 
   Program (srp.cpp):
@@ -278,6 +279,8 @@ app.get("/left", (req, res) => {
   }`);
 });
 
+=======
+>>>>>>> origin/main
 app.get("/exp5", (req, res) => {
   res.send(`%{
     #include <stdio.h>
