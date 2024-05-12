@@ -30,6 +30,39 @@ app.get("/exp3", (req, res) => {
   } `);
 });
 
+app.get("/exp4", (req, res) => {
+  res.send(`%{
+    #include <stdio.h>
+    %}
+    %%
+    if|for|while|read|then|else|display|step { printf("KEYWORD %s\n",yytext); }
+    [<|<=|==|#|>=|>] { printf("%s: RELATIONAL operators\n",yytext); }
+    "+"|"-"|"*"|"/" { printf("Arithmetic Operator: %s\n", yytext); }
+    "++"|"--"|"=" { printf("Increment Operator: %s\n", yytext); }
+    "integer" { printf("INTEGER %s\n",yytext); }
+    [a-zA-Z][a-zA-Z0-9]* { printf("IDENTIFIER %s\n",yytext); }
+    [ \t\n]+ ; /* Ignore whitespace and newline */
+    [{}();,] { printf("%s: SYMBOL\n",yytext); }
+    [.] { printf("ERROR: Unrecognized token\n"); }
+    [0-9] { printf(“Digit: %s\n”,yytext); }
+    %%
+    int yywrap() {}
+    int main() {
+    // Open the file provided as argument
+    FILE *file = fopen("file4.star.txt", "r");
+    if (!file) {
+    perror("file4.star.txt");
+    return 1;
+    }
+    // Set Flex to read from the file instead of stdin
+    yyin = file;
+    // Start parsing
+    yylex();
+    // Close the file
+    fclose(file);
+    return 0;
+    }`);
+});
 app.get("/exp5", (req, res) => {
   res.send(`%{
     #include <stdio.h>
@@ -375,6 +408,146 @@ app.get("/exp7", (req, res) => {
   // F (S)
   // F t
     `);
+});
+
+app.get("/exp9", (req, res) => {
+  res.send(`#include <iostream>
+  #include <string>
+  #include <stack>
+  #include <cctype>
+  using namespace std;
+  // Node for syntax tree
+  struct Node {
+  char data;
+  Node* left;
+  Node* right;
+  Node(char data) : data(data), left(nullptr), right(nullptr) {}
+  };
+  // Function to check if a character is an operator
+  bool isOperator(char c) {
+  return c == '+' || c == '-' || c == '*' || c == '/';
+  }
+  // Function to construct syntax tree from postfix expression
+  Node* constructSyntaxTree(const string& postfix) {
+  stack<Node*> stack;
+  for (char c : postfix) {
+  if (isalnum(c)) {
+  stack.push(new Node(c));
+  } else if (isOperator(c)) {
+  Node* rightOperand = stack.top();
+  stack.pop();
+  Node* leftOperand = stack.top();
+  stack.pop();
+  Node* newNode = new Node(c);
+  newNode->left = leftOperand;
+  newNode->right = rightOperand;
+  stack.push(newNode);
+  }
+  }
+  return stack.top();
+  }
+  // Function to perform arithmetic operation based on operator
+  int performOperation(char operation, int operand1, int operand2) {
+  switch (operation) {
+  case '+':
+  return operand1 + operand2;
+  case '-':
+  return operand1 - operand2;
+  case '*':
+  return operand1 * operand2;
+  case '/':
+  return operand1 / operand2;
+  default:
+  cerr << "Invalid operator!" << endl;
+  return 0;
+  }
+  }
+  // Function to evaluate syntax tree recursively
+  int evaluateSyntaxTree(Node* root) {
+  if (!root)
+  return 0;
+  if (isalnum(root->data)) {
+  return root->data - '0'; // Convert char to int
+  }
+  int leftValue = evaluateSyntaxTree(root->left);
+  int rightValue = evaluateSyntaxTree(root->right);
+  return performOperation(root->data, leftValue, rightValue);
+  }
+  int main() {
+  string postfixExpression;
+  cout << "Enter a postfix expression: ";
+  cin >> postfixExpression;
+  Node* syntaxTreeRoot = constructSyntaxTree(postfixExpression);
+  int result = evaluateSyntaxTree(syntaxTreeRoot);
+  cout << "Result: " << result << endl;
+  return 0;
+  }`);
+});
+
+app.get("/exp10", (req, res) => {
+  res.send(`#include <iostream>
+  #include <string>
+  #include <sstream>
+  using namespace std;
+  // Function to generate new label
+  string newLabel() {
+  static int labelCounter = 0;
+  stringstream ss;
+  ss << "L" << labelCounter++;
+  return ss.str();
+  }
+  // Function to generate intermediate code for if construct
+  string generateIf(string E, string S1_CODE, string S_NEXT) {
+  string TRUE = newLabel();
+  string FALSE = S_NEXT;
+  string code = E + " TRUE: " + TRUE + "\n" +
+  " FALSE: " + FALSE + "\n" +
+  S1_CODE + "\n" +
+  TRUE + ": \n";
+  return code;
+  }
+  // Function to generate intermediate code for if-else construct
+  string generateIfElse(string E, string S1_CODE, string S2_CODE, string S_NEXT) {
+  string TRUE = newLabel();
+  string FALSE = newLabel();
+  string code = E + " TRUE: " + TRUE + "\n" +
+  " FALSE: " + FALSE + "\n" +
+  S1_CODE + "\n" +
+  "goto " + S_NEXT + "\n" +
+  FALSE + ": \n" +
+  S2_CODE + "\n";
+  return code;
+  }
+  // Function to generate intermediate code for while construct
+  string generateWhile(string E, string S1_CODE) {
+  string BEGIN = newLabel();
+  string TRUE = newLabel();
+  string NEXT = newLabel();
+  string code = BEGIN + ": \n" +
+  E + " TRUE: " + TRUE + "\n" +
+  " FALSE: " + NEXT + "\n" +
+  S1_CODE + "\n" +
+  "goto " + BEGIN + "\n" +
+  NEXT + ": \n";
+  return code;
+  }
+  int main() {
+  // Example usage:
+  string E = "if (condition)";
+  string S1_CODE = "cout << \"Condition is true\";";
+  string S2_CODE = "cout << \"Condition is false\";";
+  string S_NEXT = "end;";
+  // Generate intermediate code for if-else construct
+  string ifElseCode = generateIfElse(E, S1_CODE, S2_CODE, S_NEXT);
+  cout << "Intermediate code for if-else:\n" << ifElseCode << endl;
+  // Generate intermediate code for if construct
+  string ifCode = generateIf(E, S1_CODE, S_NEXT);
+  cout << "Intermediate code for if:\n" << ifCode << endl;
+  // Generate intermediate code for while construct
+  string whileCode = generateWhile(E, S1_CODE);
+  cout << "Intermediate code for while:\n" << whileCode << endl;
+  return 0;
+  } `);
 });
 
 app.listen(PORT, () => {
