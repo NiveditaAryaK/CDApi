@@ -5,7 +5,7 @@ app.get("/", (req, res) => {
   res.send("Welcome");
 });
 
-app.get("/exp3", (req, res) => {
+app.get("/scanner", (req, res) => {
   res.send(`%option noyywrap
   %{
   #include <stdio.h>
@@ -30,7 +30,7 @@ app.get("/exp3", (req, res) => {
   } `);
 });
 
-app.get("/exp4", (req, res) => {
+app.get("/scannerwithfile", (req, res) => {
   res.send(`%{
     #include <stdio.h>
     %}
@@ -63,7 +63,7 @@ app.get("/exp4", (req, res) => {
     return 0;
     }`);
 });
-app.get("/exp5", (req, res) => {
+app.get("/parser", (req, res) => {
   res.send(`%{
     #include <stdio.h>
     #include "parser.tab.h"
@@ -108,7 +108,7 @@ app.get("/exp5", (req, res) => {
     }`);
 });
 
-app.get("/exp6", (req, res) => {
+app.get("/pp", (req, res) => {
   res.send(`#include<stdio.h>
   #include<string.h>
   char prol[7][10]={"S","A","A","B","B","C","C"};
@@ -180,7 +180,7 @@ app.get("/exp6", (req, res) => {
   }`);
 });
 
-app.get("/exp7", (req, res) => {
+app.get("/slr", (req, res) => {
   res.send(`#include<stdio.h>
   #include<string.h>
   #include<stdlib.h>
@@ -410,7 +410,7 @@ app.get("/exp7", (req, res) => {
     `);
 });
 
-app.get("/exp9", (req, res) => {
+app.get("/syntax", (req, res) => {
   res.send(`#include <iostream>
   #include <string>
   #include <stack>
@@ -484,72 +484,231 @@ app.get("/exp9", (req, res) => {
   }`);
 });
 
-app.get("/exp10", (req, res) => {
-  res.send(`#include <iostream>
-  #include <string>
-  #include <sstream>
-  using namespace std;
-  // Function to generate new label
-  string newLabel() {
-  static int labelCounter = 0;
-  stringstream ss;
-  ss << "L" << labelCounter++;
-  return ss.str();
-  }
-  // Function to generate intermediate code for if construct
-  string generateIf(string E, string S1_CODE, string S_NEXT) {
-  string TRUE = newLabel();
-  string FALSE = S_NEXT;
-  string code = E + " TRUE: " + TRUE + "\n" +
-  " FALSE: " + FALSE + "\n" +
-  S1_CODE + "\n" +
-  TRUE + ": \n";
-  return code;
-  }
-  // Function to generate intermediate code for if-else construct
-  string generateIfElse(string E, string S1_CODE, string S2_CODE, string S_NEXT) {
-  string TRUE = newLabel();
-  string FALSE = newLabel();
-  string code = E + " TRUE: " + TRUE + "\n" +
-  " FALSE: " + FALSE + "\n" +
-  S1_CODE + "\n" +
-  "goto " + S_NEXT + "\n" +
-  FALSE + ": \n" +
-  S2_CODE + "\n";
-  return code;
-  }
-  // Function to generate intermediate code for while construct
-  string generateWhile(string E, string S1_CODE) {
-  string BEGIN = newLabel();
-  string TRUE = newLabel();
-  string NEXT = newLabel();
-  string code = BEGIN + ": \n" +
-  E + " TRUE: " + TRUE + "\n" +
-  " FALSE: " + NEXT + "\n" +
-  S1_CODE + "\n" +
-  "goto " + BEGIN + "\n" +
-  NEXT + ": \n";
-  return code;
-  }
-  int main() {
-  // Example usage:
-  string E = "if (condition)";
-  string S1_CODE = "cout << \"Condition is true\";";
-  string S2_CODE = "cout << \"Condition is false\";";
-  string S_NEXT = "end;";
-  // Generate intermediate code for if-else construct
-  string ifElseCode = generateIfElse(E, S1_CODE, S2_CODE, S_NEXT);
-  cout << "Intermediate code for if-else:\n" << ifElseCode << endl;
-  // Generate intermediate code for if construct
-  string ifCode = generateIf(E, S1_CODE, S_NEXT);
-  cout << "Intermediate code for if:\n" << ifCode << endl;
-  // Generate intermediate code for while construct
-  string whileCode = generateWhile(E, S1_CODE);
-  cout << "Intermediate code for while:\n" << whileCode << endl;
-  return 0;
-  } `);
+app.get("/code", (req, res) => {
+  res.send(`
+  #include <stdio.h>
+int labelIndex = 0;
+char* generateLabel() {
+static char label[10];
+sprintf(label, "L%d", labelIndex++);
+return label;
+}
+void generateIfCode(char* condition, char* trueLabel, char* falseLabel) {
+printf("IF %s GOTO %s ELSE GOTO %s\n", condition, trueLabel, falseLabel);
+}
+void generateWhileCode(char* condition, char* startLabel, char* endLabel) {
+printf("%s:\n", startLabel);
+printf("IF %s GOTO %s ELSE GOTO %s\n", condition, endLabel, endLabel);
+}
+int main() {
+char* ifCondition = "x < y";
+char* ifTrueLabel = generateLabel();
+char* ifFalseLabel = generateLabel();
+generateIfCode(ifCondition, ifTrueLabel, ifFalseLabel); 
+printf("%s: printf(\"x is less than y\\n\");\n", ifTrueLabel); 
+printf("%s: printf(\"x is not less than y\\n\");\n", ifFalseLabel); 
+char* whileCondition = "i < 5";
+char* whileStartLabel = generateLabel(); 
+char* whileEndLabel = generateLabel();
+generateWhileCode(whileCondition, whileStartLabel, whileEndLabel);
+printf("%s: printf(\"i: %%d\\n\", i);\n", whileStartLabel); 
+printf("i++;\n"); 
+printf("GOTO %s;\n", whileStartLabel); 
+printf("%s:\n", whileEndLabel); 
+return 0;
+}
+ `);
 });
 
+app.get("/leftr", (req, res) => {
+  res.send(` #include<stdio.h>  
+  #include<string.h>  
+    #define SIZE 10  
+    int main () {  
+         char non_terminal;  
+         char beta,alpha;  
+         int num;  
+         char production[10][SIZE];  
+         int index=3; /* starting of the string following "->" */  
+         printf("Enter Number of Production : ");  
+         scanf("%d",&num);  
+         printf("Enter the grammar as E->E-A :\n");  
+         for(int i=0;i<num;i++){  
+              scanf("%s",production[i]);  
+         }  
+        for(int i=0;i<num;i++){  
+              printf("\nGRAMMAR : : : %s",production[i]);  
+              non_terminal=production[i][0];  
+              if(non_terminal==production[i][index]) {  
+                   alpha=production[i][index+1];  
+                   printf(" is left recursive.\n");  
+                   while(production[i][index]!=0 && production[i][index]!='|') 
+                    index++;  
+                   if(production[i][index]!=0) {  
+                        beta=production[i][index+1];  
+                        printf("Grammar without left recursion:\n");  
+                        printf("%c->%c%c\'",non_terminal,beta,non_terminal);  
+                        printf("\n%c\'->%c%c\'|E\n",non_terminal,alpha,non_terminal);  
+                   }  
+                   else  
+                        printf(" can't be reduced\n");  
+              }  
+              else  
+                   printf(" is not left recursive.\n");  
+              index=3;  
+         }  
+    }    `);
+});
+
+app.get("/leftf", (req, res) => {
+  res.send(`
+  #include <stdio.h>
+#include <string.h>
+
+int main()
+{
+    char gram[20], part1[20], part2[20], modifiedGram[20], newGram[20], tempGram[20];
+    int i, j = 0, k = 0, l = 0, pos;
+    printf("Enter Production : A->");
+    fgets(gram, sizeof(gram), stdin); // Safely read input
+    gram[strcspn(gram, "\n")] = 0;    // Remove newline character added by fgets
+
+    for (i = 0; gram[i] != '|' && gram[i] != '\0'; i++, j++)
+    {
+        part1[j] = gram[i];
+    }
+    part1[j] = '\0';
+    for (j = ++i, i = 0; gram[j] != '\0'; j++, i++)
+    {
+        part2[i] = gram[j];
+    }
+    part2[i] = '\0';
+
+    for (i = 0; i < strlen(part1) && i < strlen(part2); i++)
+    {
+        if (part1[i] == part2[i])
+        {
+            modifiedGram[k] = part1[i];
+            k++;
+            pos = i + 1;
+        }
+    }
+
+    for (i = pos, j = 0; part1[i] != '\0'; i++, j++)
+    {
+        newGram[j] = part1[i];
+    }
+    newGram[j++] = '|';
+    for (i = pos; part2[i] != '\0'; i++, j++)
+    {
+        newGram[j] = part2[i];
+    }
+    newGram[j] = '\0';
+
+    modifiedGram[k] = 'X';
+    modifiedGram[++k] = '\0';
+
+    printf("\nGrammar Without Left Factoring :\n");
+    printf(" A->%s", modifiedGram);
+    printf("\n X->%s\n", newGram);
+
+    return 0;
+} `);
+});
+
+app.get("/first", (req, res) => {
+  res.send(`
+  #include <stdio.h>
+  #include <stdlib.h>
+  #include <string.h>
+  
+  char **productions;
+  
+  int findPos(char NonTer) {
+      int i = 0;
+      while (productions[i][0] != NonTer)
+          i++;
+      return i;
+  }
+  
+  char* findGenerating(char Ter) {
+      int i = 0;
+      while (productions[i][0] != Ter)
+          i++;
+      return productions[i];
+  }
+  
+  char findFirst(char *prod) {
+      int i;
+      for (i = 3; i < strlen(prod); i++) {
+          if ((prod[i] >= 'a' && prod[i] <= 'z') || prod[i] == ')' || prod[i] == '(' || prod[i] == ',') {
+              printf(" %c ", prod[i]);
+              while (prod[i] != '/' && prod[i] != '\0')
+                  i++;
+              return prod[i]; // return the last processed character, for example
+          } else if (prod[i] >= 'A' && prod[i] <= 'Z') {
+              printf("  %c", findFirst(productions[findPos(prod[i])]));
+              return prod[i];  // return the non-terminal or another meaningful character
+          } else if (prod[i] == '#') {
+              printf("  #");
+              return '#'; // return when it's a specific symbol like '#'
+          }
+      }
+      return '\0'; // default return when none of the conditions are met
+  }
+  
+  void findFollow(char GeneratingSymbol, int n) {
+      int i, j = 0;
+      if (GeneratingSymbol == 'S')
+          printf(" $ ");
+      for (j = 0; j < n; j++) {
+          for (i = 3; i < strlen(productions[j]); i++) {
+              if (GeneratingSymbol == productions[j][i]) {
+                  if ((productions[j][i + 1] >= 'a' && productions[j][i + 1] <= 'z') || productions[j][i + 1] == ')' || productions[j][i + 1] == '(' || productions[j][i + 1] == ',') {
+                      printf(" %c ", productions[j][i + 1]);
+                  } else if (productions[j][i + 1] >= 'A' && productions[j][i + 1] <= 'Z') {
+                      char ans = findFirst(findGenerating(productions[j][i + 1]));
+                  } else if (i + 1 == strlen(productions[j])) {
+                      findFollow(productions[j][0], n);
+                  } else {
+                      continue;
+                  }
+              }
+          }
+      }
+  }
+  
+  int main() {
+      int i, n;
+      printf("Enter the number of productions: ");
+      scanf("%d\n", &n);
+      productions = (char**) malloc(sizeof(char*) * n);
+      for (i = 0; i < n; i++)
+          productions[i] = (char*) malloc(sizeof(char) * 20);
+  
+      char temp[20];  // Buffer to read input
+      for (i = 0; i < n; i++) {
+          fgets(temp, 20, stdin);
+          temp[strcspn(temp, "\n")] = 0;  // Remove newline character
+          strcpy(productions[i], temp);
+      }
+  
+      // First Computation
+      for (i = 0; i < n; i++) {
+          printf("\nFIRST(%c)={  ", productions[i][0]);
+          char ans = findFirst(productions[i]);
+          printf("}\n");
+      }
+  
+      for (i = 0; i < n; i++) {
+          printf("\nFOLLOW(%c)={", productions[i][0]);
+          findFollow(productions[i][0], n);
+          printf("}\n");
+      }
+      printf("\nThe End");
+      return 0;
+  } `);
+});
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
