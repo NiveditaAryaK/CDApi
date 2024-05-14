@@ -66,46 +66,59 @@ app.get("/scannerwithfile", (req, res) => {
 app.get("/parser", (req, res) => {
   res.send(`%{
     #include <stdio.h>
-    #include "parser.tab.h"
-    %}
-    %option noyywrap
-    %%
-    [0-9]+ { yylval.num = atoi(yytext); return NUMBER; }
-    \n { return 0; }
-    . { return yytext[0]; }
-    %%
-    Parser file
-    %{
-    #include <stdio.h>
+    #include "y.tab.h"
+    
+    int yylex();
     void yyerror(const char *s);
-    int yylex(void);
-    int yyparse(void);
     %}
-    %union {
-    int num;
-    }
-    %token <num> NUMBER
-    %left '+' '-
-    '
-    %left '' '/' // Changed to left associativity for '' and '/'
-    %type <num> AE
-    %type <num> E
+    
     %%
-    AE : E { printf("The result is %d\n", $$); }
-    E : E '' E { $$ = $1 * $3; } // Higher precedence for '' and '/'
-    | E '/' E { $$ = $1 / $3; } // Higher precedence for '*' and '/'
-    | E '+' E { $$ = $1 + $3; }
-    | E '-' E { $$ = $1 - $3; }
-    | NUMBER { $$ = $1; }
-    ;
+    [0-9]+ { yylval.num = atoi(yytext);
+             return (NUMBER);}
+    \n { return 0; }
+    [ \t]+ ;
+    . { return (yytext[0]); }
     %%
-    int main() {
-    yyparse();
-    return 0;
-    }
-    void yyerror(const char *s) {
-    printf("Error: %s\n", s);
-    }`);
+    y.y
+    %{
+        #include <stdio.h>
+        int yylex();
+        void yyerror(const char *s);
+        %}
+        
+        %union{
+        int num;
+        }
+        
+        %token <num>NUMBER
+        %left '+' '-'
+        %left '*' '/'
+        %type <num>AE
+        %type <num>E
+        
+        %%
+        AE:E { printf("The result is %d\n", $$); }
+        E: E '+' E { $$ = $1 + $3; }
+        E: E '-' E { $$ = $1 - $3; }
+        E: E '*' E { $$ = $1 * $3; }
+        E: E '/' E { $$ = $1 / $3; }
+        E: NUMBER { $$ = $1; }
+        %%
+        
+        int main(void)
+        {
+         yyparse();
+         return 0;
+        }
+        
+        void yyerror(const char *s)
+        {
+         printf("Error: %s", s);
+        }
+        bison -d y.y
+        flex scanner.lex
+        gcc lex.yy.c y.tab.c -W
+        ./a.out`);
 });
 
 app.get("/pp", (req, res) => {
@@ -486,7 +499,7 @@ app.get("/syntax", (req, res) => {
 
 app.get("/code", (req, res) => {
   res.send(`
-  #include <stdio.h>
+#include <stdio.h>
 int labelIndex = 0;
 char* generateLabel() {
 static char label[10];
@@ -521,7 +534,8 @@ return 0;
 });
 
 app.get("/leftr", (req, res) => {
-  res.send(` #include<stdio.h>  
+  res.send(` 
+  #include<stdio.h>  
   #include<string.h>  
     #define SIZE 10  
     int main () {  
@@ -562,7 +576,7 @@ app.get("/leftr", (req, res) => {
 
 app.get("/leftf", (req, res) => {
   res.send(`
-  #include <stdio.h>
+#include <stdio.h>
 #include <string.h>
 
 int main()
@@ -708,6 +722,126 @@ app.get("/first", (req, res) => {
       printf("\nThe End");
       return 0;
   } `);
+});
+
+app.get("/java", (req, res) => {
+  res.send(`
+    import java.util.Scanner;
+
+    public class PrimeCheck {
+        public static void main(String[] args) {
+            Scanner scanner = new Scanner(System.in);  // Create a Scanner object
+            System.out.println("Enter a number to check if it's prime:");
+    
+            int number = scanner.nextInt();  // Read user input
+            int primeFlag = 1;  // Use an integer to indicate primality: 1 for prime, 0 for not prime
+    
+            // Handling edge case for numbers less than 2
+            if (number < 2) {
+                primeFlag = 0;
+            }
+    
+            // Check for factors up to the square root of the number
+            for (int i = 2; i * i <= number; i++) {
+                if (number % i == 0) {
+                    primeFlag = 0;  // Factor found, number is not prime
+                    break;  // Exit the loop early
+                }
+            }
+    
+            if (primeFlag == 1) {
+                System.out.println(number + " is a prime number.");
+            } else {
+                System.out.println(number + " is not a prime number.");
+            }
+    
+            scanner.close();  // Close the scanner
+        }
+    }
+    import java.util.Scanner;
+
+class Palindrome {
+    public static void main(String args[]) {
+        Scanner sc = new Scanner(System.in);
+        System.out.println("Enter a number to check for palindrome");
+        int n = sc.nextInt();
+        int reversed = 0;
+        int original = n;
+
+        while (n != 0) {
+            int digit = n % 10;
+            reversed = reversed * 10 + digit;
+            n = n / 10;
+        }
+
+        if (original == reversed) {
+            System.out.println("Palindrome");
+        } else {
+            System.out.println("Not a palindrome");
+        }
+    }
+}
+
+import java.util.Scanner; // Import the Scanner class
+
+class FactorialExample {
+    public static void main(String args[]) {
+        Scanner scanner = new Scanner(System.in);  // Create a Scanner object for input
+        System.out.println("Enter a number to calculate its factorial:");
+
+        int number = scanner.nextInt();  // Read user input as an integer
+        int fact = 1;
+
+        for (int i = 1; i <= number; i++) {
+            fact *= i;
+        }
+
+        System.out.println("Factorial of " + number + " is: " + fact);
+
+        scanner.close();  // Close the scanner
+    }
+}
+
+import java.util.Scanner;
+
+public class SecondSmallestFinder {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        
+        System.out.println("Enter the number of elements in the array:");
+        int n = scanner.nextInt();  // Number of elements in the array
+        int[] array = new int[n];
+        
+        System.out.println("Enter the elements of the array:");
+        for (int i = 0; i < n; i++) {
+            array[i] = scanner.nextInt();  // Read each element into the array
+        }
+        
+        if (n < 2) {
+            System.out.println("Array must contain at least two elements.");
+        } else {
+            int first = array[0];
+            int second = array[1];
+            
+            for (int i = 1; i < n; i++) {
+                if (array[i] > first) {
+                    second = first;
+                    first = array[i];
+                } else if (array[i] != first && array[i] > second) {
+                    second = array[i];
+                }
+            }
+            
+            if (first==second) {
+                System.out.println("There is no second smallest number because all elements are the same.");
+            } else {
+                System.out.println("The second smallest number is: " + second);
+            }
+        }
+        
+        scanner.close();
+    }
+}`);
 });
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
